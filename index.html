@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ôn tập Tin học 11 - Trực tuyến</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- MÀN HÌNH 1: NHẬP THÔNG TIN HỌC SINH -->
+  <!-- ========================================== -->
+  <section id="screen-start" class="screen active">
+    <div class="container container-sm">
+      <div class="card intro-card">
+        <div class="badge-tag">Hệ Thống Ôn Tập Trực Tuyến</div>
+        <h1 id="intro-title" class="title-primary">Ôn Tập Tin Học 11</h1>
+        <p id="intro-subject" class="subtitle">Đề kiểm tra định kỳ theo định dạng mới (GDPT 2018)</p>
+
+        <div class="exam-rules">
+          <h3>📌 Cấu trúc bài kiểm tra:</h3>
+          <ul>
+            <li><strong>Phần I:</strong> Trắc nghiệm nhiều lựa chọn (chọn 1 đáp án A, B, C, D).</li>
+            <li><strong>Phần II:</strong> Trắc nghiệm Đúng/Sai (chọn Đ hoặc S cho từng ý a, b, c, d - barem chuẩn).</li>
+            <li><strong>Phần III:</strong> Tự luận / Trả lời ngắn (học sinh nhập văn bản và đối chiếu đáp án mẫu).</li>
+          </ul>
+          <div class="exam-meta-pill">
+            <span>⏱️ Thời gian: <strong id="intro-time">45</strong> phút</span>
+            <span>📝 Tổng số câu: <strong id="intro-count">...</strong> câu</span>
+          </div>
+        </div>
+
+        <form id="form-login" class="login-form">
+          <div class="form-group">
+            <label for="student-name">Họ và tên học sinh <span class="required">*</span></label>
+            <input type="text" id="student-name" placeholder="Ví dụ: Nguyễn Văn An" autocomplete="name" required>
+            <small class="error-msg" id="name-error"></small>
+          </div>
+
+          <div class="form-group">
+            <label for="student-class">Lớp học <span class="required">*</span></label>
+            <input type="text" id="student-class" placeholder="Ví dụ: 11A1" required>
+            <small class="error-msg" id="class-error"></small>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            Bắt đầu làm bài 🚀
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- MÀN HÌNH 2: LÀM BÀI THI -->
+  <!-- ========================================== -->
+  <section id="screen-exam" class="screen">
+    <!-- Thanh điều hướng cố định trên cùng -->
+    <header class="exam-header">
+      <div class="container header-content">
+        <div class="student-chip">
+          <div class="avatar-icon">🎓</div>
+          <div>
+            <div class="chip-name" id="exam-student-name">Học sinh</div>
+            <div class="chip-class" id="exam-student-class">Lớp</div>
+          </div>
+        </div>
+
+        <div class="timer-box" id="timer-box">
+          <span class="timer-icon">⏳</span>
+          <span id="timer-display" class="timer-text">45:00</span>
+        </div>
+
+        <div class="progress-box">
+          <span class="progress-text" id="progress-text">Đã làm: 0/0</span>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Vùng hiển thị danh sách câu hỏi -->
+    <main class="container exam-main">
+      <div id="questions-container" class="questions-list">
+        <!-- Render động từ JavaScript -->
+      </div>
+
+      <!-- Nút nộp bài cuối trang -->
+      <div class="exam-footer">
+        <button id="btn-submit-exam" class="btn btn-success btn-lg">
+          Nộp bài và Xem kết quả ✨
+        </button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- MÀN HÌNH 3: BÁO CÁO KẾT QUẢ & ĐÁP ÁN -->
+  <!-- ========================================== -->
+  <section id="screen-result" class="screen">
+    <div class="container container-md">
+      
+      <!-- Bảng điểm tổng quan -->
+      <div class="card result-card">
+        <div class="result-header">
+          <div class="trophy-badge">🏆</div>
+          <h2>KẾT QUẢ LÀM BÀI</h2>
+          <p id="result-student-info" class="text-muted">Nguyễn Văn An - Lớp 11A1</p>
+        </div>
+
+        <div class="score-grid">
+          <div class="score-card score-total">
+            <div class="score-label">TỔNG ĐIỂM TRẮC NGHIỆM</div>
+            <div class="score-val" id="score-total-val">0.0</div>
+            <div class="score-sub" id="score-total-max">/ 10 điểm</div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Phần I (Nhiều lựa chọn)</div>
+            <div class="score-val-sm" id="score-p1-val">0.0 đ</div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Phần II (Đúng/Sai)</div>
+            <div class="score-val-sm" id="score-p2-val">0.0 đ</div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Thời gian hoàn thành</div>
+            <div class="score-val-sm" id="score-time-val">0 phút</div>
+          </div>
+        </div>
+
+        <!-- Trạng thái đồng bộ Google Sheets -->
+        <div id="sync-status" class="sync-banner sync-loading">
+          <span class="sync-icon">🔄</span>
+          <span id="sync-text">Đang gửi dữ liệu bài làm vào Google Sheets...</span>
+        </div>
+
+        <div class="action-buttons">
+          <button id="btn-restart" class="btn btn-outline">🔄 Làm lại bài thi</button>
+          <button id="btn-print" class="btn btn-secondary">🖨️ In kết quả / Lưu PDF</button>
+        </div>
+      </div>
+
+      <!-- Xem lại chi tiết từng câu & Đáp án gợi ý tự luận -->
+      <div class="review-section">
+        <h3 class="review-heading">Chi tiết bài làm & Đáp án giải thích</h3>
+        <div id="review-container" class="review-list">
+          <!-- Render động từ JS -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Modal xác nhận nộp bài -->
+  <div id="modal-confirm" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Xác nhận nộp bài</h3>
+      <p id="modal-confirm-msg">Em có chắc chắn muốn nộp bài kiểm tra ngay bây giờ?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel-btn" class="btn btn-outline">Làm tiếp</button>
+        <button id="modal-confirm-btn" class="btn btn-success">Đồng ý nộp bài</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
