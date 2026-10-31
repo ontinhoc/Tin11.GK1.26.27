@@ -96,6 +96,19 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.exam-pill-badge {
+  display: inline-block;
+  background: #1e293b;
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.05em;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -124,6 +137,15 @@ body {
 
 .btn-primary:hover {
   background: var(--primary-dark);
+}
+
+.btn-next-exam {
+  background: #6366f1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.btn-next-exam:hover {
+  background: #4f46e5;
 }
 
 .btn-success {
@@ -164,11 +186,11 @@ body {
   font-size: 1.1rem;
 }
 
-/* =================== MÀN HÌNH 1: ĐĂNG NHẬP =================== */
+/* =================== MÀN HÌNH 1: ĐĂNG NHẬP & CHỌN ĐỀ =================== */
 .intro-card {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   text-align: center;
-  padding: 2.5rem 1.75rem;
+  padding: 2.25rem 1.75rem;
 }
 
 .title-primary {
@@ -181,7 +203,50 @@ body {
 .subtitle {
   color: var(--text-muted);
   font-size: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Hộp chọn đề thi */
+.exam-selector-box {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.exam-selector-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #166534;
+  margin-bottom: 0.4rem;
+}
+
+.selector-wrapper select {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.selector-wrapper select:focus {
+  outline: none;
+  border-color: var(--success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.selector-note {
+  display: block;
+  font-size: 0.8rem;
+  color: #15803d;
+  margin-top: 0.4rem;
+  font-style: italic;
 }
 
 .exam-rules {
@@ -190,7 +255,7 @@ body {
   border-radius: var(--radius-md);
   padding: 1.25rem;
   text-align: left;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
   font-size: 0.95rem;
 }
 
@@ -469,7 +534,7 @@ body {
   flex: 1;
 }
 
-/* DẠNG 2: ĐÚNG / SAI (TABLE / LIST BUTTONS) */
+/* DẠNG 2: ĐÚNG / SAI (SEGMENTED BUTTONS) */
 .tf-items-list {
   display: flex;
   flex-direction: column;
@@ -505,7 +570,7 @@ body {
   margin-right: 0.25rem;
 }
 
-/* Segmented Buttons Đúng / Sai */
+/* Nút Đúng / Sai */
 .tf-btn-group {
   display: inline-flex;
   gap: 0.5rem;
@@ -579,6 +644,11 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.result-meta-line {
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
 .score-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -617,7 +687,7 @@ body {
 }
 
 .score-val-sm {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 800;
   color: var(--text-main);
   margin-top: 0.25rem;
