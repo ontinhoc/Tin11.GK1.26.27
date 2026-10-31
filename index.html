@@ -12,7 +12,7 @@
 <body>
 
   <!-- ========================================== -->
-  <!-- MÀN HÌNH 1: NHẬP THÔNG TIN HỌC SINH -->
+  <!-- MÀN HÌNH 1: NHẬP THÔNG TIN & CHỌN ĐỀ -->
   <!-- ========================================== -->
   <section id="screen-start" class="screen active">
     <div class="container container-sm">
@@ -21,16 +21,33 @@
         <h1 id="intro-title" class="title-primary">Ôn Tập Tin Học 11</h1>
         <p id="intro-subject" class="subtitle">Đề kiểm tra định kỳ theo định dạng mới (GDPT 2018)</p>
 
+        <!-- Khung hiển thị / chọn Đề thi (5 Đề) -->
+        <div class="exam-selector-box">
+          <label for="select-exam" class="exam-selector-label">
+            🎯 <strong>ĐỀ ÔN TẬP ĐƯỢC CHỈ ĐỊNH:</strong>
+          </label>
+          <div class="selector-wrapper">
+            <select id="select-exam" class="exam-dropdown">
+              <option value="0">Đề số 01 (18 câu)</option>
+              <option value="1">Đề số 02 (18 câu)</option>
+              <option value="2">Đề số 03 (18 câu)</option>
+              <option value="3">Đề số 04 (18 câu)</option>
+              <option value="4">Đề số 05 (18 câu)</option>
+            </select>
+          </div>
+          <small class="selector-note">Hệ thống sẽ tự động chuyển sang đề tiếp theo mỗi lần em làm lại bài.</small>
+        </div>
+
         <div class="exam-rules">
-          <h3>📌 Cấu trúc bài kiểm tra:</h3>
+          <h3>📌 Cấu trúc bài kiểm tra (18 câu):</h3>
           <ul>
-            <li><strong>Phần I:</strong> Trắc nghiệm nhiều lựa chọn (chọn 1 đáp án A, B, C, D).</li>
-            <li><strong>Phần II:</strong> Trắc nghiệm Đúng/Sai (chọn Đ hoặc S cho từng ý a, b, c, d - barem chuẩn).</li>
-            <li><strong>Phần III:</strong> Tự luận / Trả lời ngắn (học sinh nhập văn bản và đối chiếu đáp án mẫu).</li>
+            <li><strong>Phần I:</strong> 12 câu trắc nghiệm nhiều lựa chọn (3.0 điểm).</li>
+            <li><strong>Phần II:</strong> 4 câu trắc nghiệm Đúng/Sai (4.0 điểm - barem chuẩn).</li>
+            <li><strong>Phần III:</strong> 2 câu tự luận / trả lời ngắn (3.0 điểm).</li>
           </ul>
           <div class="exam-meta-pill">
             <span>⏱️ Thời gian: <strong id="intro-time">45</strong> phút</span>
-            <span>📝 Tổng số câu: <strong id="intro-count">...</strong> câu</span>
+            <span>📝 Tổng số câu: <strong id="intro-count">18</strong> câu</span>
           </div>
         </div>
 
@@ -65,8 +82,11 @@
         <div class="student-chip">
           <div class="avatar-icon">🎓</div>
           <div>
-            <div class="chip-name" id="exam-student-name">Học sinh</div>
-            <div class="chip-class" id="exam-student-class">Lớp</div>
+            <div class="chip-name">
+              <span id="exam-student-name">Học sinh</span> 
+              <span class="exam-pill-badge" id="exam-badge-code">ĐỀ SỐ 01</span>
+            </div>
+            <div class="chip-class" id="exam-student-class">Lớp: ...</div>
           </div>
         </div>
 
@@ -76,7 +96,7 @@
         </div>
 
         <div class="progress-box">
-          <span class="progress-text" id="progress-text">Đã làm: 0/0</span>
+          <span class="progress-text" id="progress-text">Đã làm: 0/18</span>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progress-bar-fill"></div>
           </div>
@@ -110,25 +130,28 @@
         <div class="result-header">
           <div class="trophy-badge">🏆</div>
           <h2>KẾT QUẢ LÀM BÀI</h2>
-          <p id="result-student-info" class="text-muted">Nguyễn Văn An - Lớp 11A1</p>
+          <div class="result-meta-line">
+            <span id="result-student-info" class="text-muted">Nguyễn Văn An - Lớp 11A1</span>
+            <span class="exam-pill-badge" id="result-exam-code">ĐỀ SỐ 01</span>
+          </div>
         </div>
 
         <div class="score-grid">
           <div class="score-card score-total">
-            <div class="score-label">TỔNG ĐIỂM TRẮC NGHIỆM</div>
+            <div class="score-label">TỔNG ĐIỂM TRẮC NGHIỆM (PHẦN I & II)</div>
             <div class="score-val" id="score-total-val">0.0</div>
-            <div class="score-sub" id="score-total-max">/ 10 điểm</div>
+            <div class="score-sub" id="score-total-max">/ 7.0 điểm trắc nghiệm</div>
           </div>
           <div class="score-card">
-            <div class="score-label">Phần I (Nhiều lựa chọn)</div>
-            <div class="score-val-sm" id="score-p1-val">0.0 đ</div>
+            <div class="score-label">Phần I (12 câu)</div>
+            <div class="score-val-sm" id="score-p1-val">0.0 / 3.0 đ</div>
           </div>
           <div class="score-card">
-            <div class="score-label">Phần II (Đúng/Sai)</div>
-            <div class="score-val-sm" id="score-p2-val">0.0 đ</div>
+            <div class="score-label">Phần II (4 câu Đ/S)</div>
+            <div class="score-val-sm" id="score-p2-val">0.0 / 4.0 đ</div>
           </div>
           <div class="score-card">
-            <div class="score-label">Thời gian hoàn thành</div>
+            <div class="score-label">Thời gian làm bài</div>
             <div class="score-val-sm" id="score-time-val">0 phút</div>
           </div>
         </div>
@@ -140,7 +163,9 @@
         </div>
 
         <div class="action-buttons">
-          <button id="btn-restart" class="btn btn-outline">🔄 Làm lại bài thi</button>
+          <button id="btn-restart" class="btn btn-primary btn-next-exam">
+            <span>🔄</span> <span id="btn-restart-label">Làm tiếp Đề tiếp theo</span>
+          </button>
           <button id="btn-print" class="btn btn-secondary">🖨️ In kết quả / Lưu PDF</button>
         </div>
       </div>
