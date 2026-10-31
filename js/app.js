@@ -1,10 +1,12 @@
 /**
- * APP.JS - QUẢN LÝ LUỒNG HOẠT ĐỘNG, RENDER GIAO DIỆN VÀ CHẤM ĐIỂM
+ * APP.JS - QUẢN LÝ LUỒNG HOẠT ĐỘNG, 5 ĐỀ ÔN TẬP VÀ ĐỒNG BỘ GOOGLE SHEETS
  */
 
 document.addEventListener("DOMContentLoaded", () => {
   // Trạng thái ứng dụng (Application State)
   const state = {
+    currentExamIndex: 0, // 0: Đề 1, 1: Đề 2, 2: Đề 3, 3: Đề 4, 4: Đề 5
+    activeQuestions: [], // 18 câu hỏi trích xuất cho đề hiện tại
     student: {
       name: "",
       className: ""
@@ -29,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("form-login");
   const studentNameInput = document.getElementById("student-name");
   const studentClassInput = document.getElementById("student-class");
+  const selectExam = document.getElementById("select-exam");
   const questionsContainer = document.getElementById("questions-container");
   const timerDisplay = document.getElementById("timer-display");
   const timerBox = document.getElementById("timer-box");
@@ -42,14 +45,34 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCancelBtn = document.getElementById("modal-cancel-btn");
   const modalConfirmBtn = document.getElementById("modal-confirm-btn");
 
-  // Khởi tạo trang ban đầu
+  // Khởi tạo ứng dụng
   initApp();
 
   function initApp() {
+    // 1. Phục hồi chỉ số đề thi từ bộ nhớ trình duyệt (nếu có)
+    const savedExamIndex = localStorage.getItem("tin11_saved_exam_index");
+    if (savedExamIndex !== null) {
+      state.currentExamIndex = parseInt(savedExamIndex, 10) % EXAM_CONFIG.examList.length;
+    } else {
+      state.currentExamIndex = 0;
+    }
+
+    // 2. Phục hồi thông tin học sinh (để đỡ phải gõ lại khi làm đề tiếp theo)
+    const savedName = localStorage.getItem("tin11_saved_student_name");
+    const savedClass = localStorage.getItem("tin11_saved_student_class");
+    if (savedName) studentNameInput.value = savedName;
+    if (savedClass) studentClassInput.value = savedClass;
+
+    // 3. Cập nhật giao diện ban đầu
+    selectExam.value = state.currentExamIndex;
+    selectExam.addEventListener("change", (e) => {
+      state.currentExamIndex = parseInt(e.target.value, 10);
+      localStorage.setItem("tin11_saved_exam_index", state.currentExamIndex);
+    });
+
     document.getElementById("intro-title").textContent = EXAM_CONFIG.title;
     document.getElementById("intro-subject").textContent = EXAM_CONFIG.subject;
     document.getElementById("intro-time").textContent = EXAM_CONFIG.durationMinutes;
-    document.getElementById("intro-count").textContent = QUESTIONS_DATA.length;
 
     // Gán sự kiện Form đăng nhập
     loginForm.addEventListener("submit", handleLoginSubmit);
@@ -62,13 +85,11 @@ document.addEventListener("DOMContentLoaded", () => {
       finishExam();
     });
 
-    // Sự kiện nút In kết quả & Làm lại
+    // Sự kiện nút In kết quả
     document.getElementById("btn-print").addEventListener("click", () => window.print());
-    document.getElementById("btn-restart").addEventListener("click", () => {
-      if (confirm("Em có muốn đăng xuất và bắt đầu làm bài lại từ đầu?")) {
-        window.location.reload();
-      }
-    });
+
+    // Sự kiện nút "LÀM TIẾP ĐỀ TIẾP THEO"
+    document.getElementById("btn-restart").addEventListener("click", handleNextExam);
   }
 
   // ==========================================
@@ -81,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
-  // MÀN HÌNH 1 -> MÀN HÌNH 2: BẮT ĐẦU THI
+  // MÀN HÌNH 1 -> MÀN HÌNH 2: BẮT ĐẦU LÀM BÀI
   // ==========================================
   function handleLoginSubmit(e) {
     e.preventDefault();
@@ -96,12 +117,22 @@ document.addEventListener("DOMContentLoaded", () => {
     state.student.name = name;
     state.student.className = className;
     state.startTime = new Date();
+    state.answers = {}; // Reset câu trả lời
 
-    // Hiển thị thông tin lên Header bài thi
+    // Lưu lại tên học sinh
+    localStorage.setItem("tin11_saved_student_name", name);
+    localStorage.setItem("tin11_saved_student_class", className);
+
+    // Lấy đề thi tương ứng (18 câu)
+    const currentExam = EXAM_CONFIG.examList[state.currentExamIndex];
+    state.activeQuestions = getQuestionsForExam(state.currentExamIndex);
+
+    // Cập nhật Header bài thi
     document.getElementById("exam-student-name").textContent = name;
     document.getElementById("exam-student-class").textContent = "Lớp: " + className;
+    document.getElementById("exam-badge-code").textContent = currentExam.code;
 
-    // Render danh sách câu hỏi
+    // Render danh sách câu hỏi của đề hiện tại
     renderQuestions();
 
     // Bắt đầu đếm ngược thời gian
@@ -118,6 +149,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function startTimer(durationSeconds) {
     state.timeRemaining = durationSeconds;
     updateTimerDisplay();
+
+    if (state.timerInterval) clearInterval(state.timerInterval);
 
     state.timerInterval = setInterval(() => {
       state.timeRemaining--;
@@ -142,14 +175,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
-  // RENDER CÂU HỎI THEO 3 DẠNG
+  // RENDER CÂU HỎI THEO 3 PHẦN THI
   // ==========================================
   function renderQuestions() {
     questionsContainer.innerHTML = "";
     let currentSection = "";
 
-    QUESTIONS_DATA.forEach((q, index) => {
-      // Nếu qua phần thi mới thì chèn banner phân cách
+    state.activeQuestions.forEach((q, index) => {
+      // Phân tách từng Phần thi (Phần I, II, III)
       if (q.section && q.section !== currentSection) {
         currentSection = q.section;
         const sectionBanner = document.createElement("div");
@@ -170,7 +203,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="question-title">${q.content}</div>
       `;
 
-      // Render nội dung tương ứng theo dạng câu hỏi
       if (q.type === "multiple_choice") {
         questionHtml += renderMultipleChoice(q);
       } else if (q.type === "true_false") {
@@ -183,18 +215,17 @@ document.addEventListener("DOMContentLoaded", () => {
       questionsContainer.appendChild(qCard);
     });
 
-    // Gán sự kiện tương tác sau khi render DOM
     attachQuestionEvents();
   }
 
   function getQuestionPointLabel(q) {
-    if (q.type === "multiple_choice") return `${q.point} điểm`;
+    if (q.type === "multiple_choice") return "0.25 điểm";
     if (q.type === "true_false") return "Tối đa 1.0 điểm";
-    if (q.type === "essay") return "Tự luận";
+    if (q.type === "essay") return "1.5 điểm (Tự luận)";
     return "";
   }
 
-  // Render Dạng 1: Trắc nghiệm 4 lựa chọn
+  // Dạng 1: Trắc nghiệm 4 lựa chọn
   function renderMultipleChoice(q) {
     let html = `<div class="options-list">`;
     q.options.forEach(opt => {
@@ -209,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return html;
   }
 
-  // Render Dạng 2: Đúng / Sai
+  // Dạng 2: Đúng / Sai
   function renderTrueFalse(q) {
     let html = `<div class="tf-items-list">`;
     q.items.forEach(item => {
@@ -229,27 +260,26 @@ document.addEventListener("DOMContentLoaded", () => {
     return html;
   }
 
-  // Render Dạng 3: Tự luận
+  // Dạng 3: Tự luận
   function renderEssay(q) {
     return `
       <textarea 
         class="essay-textarea" 
         data-qid="${q.id}" 
-        placeholder="${q.placeholder || 'Nhập câu trả lời của em...'}"
+        placeholder="${q.placeholder || 'Nhập câu trả lời tự luận của em...'}"
       ></textarea>
     `;
   }
 
-  // Gán sự kiện lắng nghe tương tác trả lời
+  // Gán sự kiện tương tác
   function attachQuestionEvents() {
-    // 1. Sự kiện Dạng 1 (Radio)
+    // 1. Dạng 1
     document.querySelectorAll("input[type='radio']").forEach(radio => {
       radio.addEventListener("change", (e) => {
         const qId = e.target.getAttribute("data-qid");
         const val = e.target.value;
         state.answers[qId] = val;
 
-        // Cập nhật giao diện radio được chọn
         document.querySelectorAll(`[id^="opt-container-${qId}-"]`).forEach(el => el.classList.remove("selected"));
         document.getElementById(`opt-container-${qId}-${val}`).classList.add("selected");
 
@@ -258,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // 2. Sự kiện Dạng 2 (Đúng / Sai)
+    // 2. Dạng 2
     document.querySelectorAll(".tf-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const qId = e.target.getAttribute("data-qid");
@@ -270,15 +300,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         state.answers[qId][itemId] = val;
 
-        // Cập nhật màu nút bấm trong nhóm
         const parentGroup = e.target.closest(".tf-btn-group");
         parentGroup.querySelectorAll(".tf-btn").forEach(b => {
           b.classList.remove("selected-true", "selected-false");
         });
         e.target.classList.add(val ? "selected-true" : "selected-false");
 
-        // Kiểm tra xem đã trả lời đủ 4 ý (a, b, c, d) chưa
-        const questionData = QUESTIONS_DATA.find(item => item.id === qId);
+        const questionData = state.activeQuestions.find(item => item.id === qId);
         const answeredCount = Object.keys(state.answers[qId]).length;
         const isComplete = answeredCount === questionData.items.length;
         markCardAnswered(qId, isComplete);
@@ -286,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // 3. Sự kiện Dạng 3 (Tự luận textarea)
+    // 3. Dạng 3
     document.querySelectorAll(".essay-textarea").forEach(textarea => {
       textarea.addEventListener("input", (e) => {
         const qId = e.target.getAttribute("data-qid");
@@ -311,27 +339,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
-  // CẬP NHẬT TIẾN ĐỘ LÀM BÀI
+  // CẬP NHẬT TIẾN ĐỘ
   // ==========================================
   function updateProgress() {
-    let answeredQuestionsCount = 0;
+    let answeredCount = 0;
 
-    QUESTIONS_DATA.forEach(q => {
+    state.activeQuestions.forEach(q => {
       if (q.type === "multiple_choice" && state.answers[q.id]) {
-        answeredQuestionsCount++;
+        answeredCount++;
       } else if (q.type === "true_false") {
         if (state.answers[q.id] && Object.keys(state.answers[q.id]).length === q.items.length) {
-          answeredQuestionsCount++;
+          answeredCount++;
         }
       } else if (q.type === "essay" && state.answers[q.id] && state.answers[q.id].length > 0) {
-        answeredQuestionsCount++;
+        answeredCount++;
       }
     });
 
-    const total = QUESTIONS_DATA.length;
-    const percentage = Math.round((answeredQuestionsCount / total) * 100);
+    const total = state.activeQuestions.length;
+    const percentage = Math.round((answeredCount / total) * 100);
 
-    progressText.textContent = `Đã làm: ${answeredQuestionsCount}/${total} câu`;
+    progressText.textContent = `Đã làm: ${answeredCount}/${total} câu`;
     progressBarFill.style.width = `${percentage}%`;
   }
 
@@ -341,7 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleOpenConfirmModal() {
     let unansweredCount = 0;
 
-    QUESTIONS_DATA.forEach(q => {
+    state.activeQuestions.forEach(q => {
       if (q.type === "multiple_choice" && !state.answers[q.id]) {
         unansweredCount++;
       } else if (q.type === "true_false") {
@@ -357,7 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (unansweredCount > 0) {
       modalConfirmMsg.innerHTML = `Em còn <strong>${unansweredCount} câu</strong> chưa hoàn thành.<br>Em có chắc chắn muốn nộp bài ngay bây giờ?`;
     } else {
-      modalConfirmMsg.textContent = "Em đã hoàn thành tất cả các câu hỏi! Nhấn 'Đồng ý' để nộp bài và xem điểm.";
+      modalConfirmMsg.textContent = "Em đã hoàn thành tất cả 18 câu hỏi! Nhấn 'Đồng ý' để nộp bài và xem điểm số.";
     }
 
     modalConfirm.classList.add("active");
@@ -373,16 +401,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const durationSeconds = Math.round((state.endTime - state.startTime) / 1000);
     const durationMinutes = (durationSeconds / 60).toFixed(1);
 
-    // 1. Tính điểm
     let p1Points = 0;
     let p2Points = 0;
     const evaluationResults = [];
 
-    QUESTIONS_DATA.forEach((q, index) => {
+    state.activeQuestions.forEach((q, index) => {
       if (q.type === "multiple_choice") {
         const studentChoice = state.answers[q.id];
         const isCorrect = studentChoice === q.correctAnswer;
-        const earned = isCorrect ? q.point : 0;
+        const earned = isCorrect ? (q.point || 0.25) : 0;
         p1Points += earned;
 
         evaluationResults.push({
@@ -415,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         });
 
-        // Áp dụng barem chuẩn Bộ GD&ĐT
+        // Barem chuẩn Bộ GD&ĐT
         const earned = EXAM_CONFIG.trueFalseScoringMatrix[correctSubCount] || 0.0;
         p2Points += earned;
 
@@ -445,27 +472,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     state.totalPointsPart1 = Number(p1Points.toFixed(2));
     state.totalPointsPart2 = Number(p2Points.toFixed(2));
+    // Tổng điểm trắc nghiệm (Tối đa 7.0 điểm)
     state.totalScore = Number((state.totalPointsPart1 + state.totalPointsPart2).toFixed(2));
 
-    // 2. Hiển thị kết quả lên giao diện
+    // Hiển thị kết quả lên màn hình 3
     renderResultsView(durationMinutes, evaluationResults);
 
-    // 3. Gửi payload ngầm lên Google Apps Script
+    // Gửi payload ngầm kèm Mã Đề sang Google Apps Script
     syncToGoogleSheets(durationMinutes, evaluationResults);
 
-    // Chuyển sang màn hình 3
+    // Chuẩn bị nút đề tiếp theo
+    updateNextExamButtonLabel();
+
+    // Chuyển màn hình
     showScreen("result");
   }
 
+  // Cập nhật nhãn nút "Làm đề tiếp theo"
+  function updateNextExamButtonLabel() {
+    const nextIdx = (state.currentExamIndex + 1) % EXAM_CONFIG.examList.length;
+    const nextExam = EXAM_CONFIG.examList[nextIdx];
+    document.getElementById("btn-restart-label").textContent = `Làm tiếp ${nextExam.code} ➔`;
+  }
+
   // ==========================================
-  // RENDER MÀN HÌNH KẾT QUẢ & ĐỐI CHIẾU
+  // XỬ LÝ LÀM TIẾP ĐỀ TIẾP THEO
+  // ==========================================
+  function handleNextExam() {
+    // Tự động nhảy sang đề tiếp theo (0 -> 1 -> 2 -> 3 -> 4 -> 0)
+    state.currentExamIndex = (state.currentExamIndex + 1) % EXAM_CONFIG.examList.length;
+    localStorage.setItem("tin11_saved_exam_index", state.currentExamIndex);
+
+    // Cập nhật dropdown ở màn hình 1
+    selectExam.value = state.currentExamIndex;
+
+    const nextExam = EXAM_CONFIG.examList[state.currentExamIndex];
+    alert(`🎯 Em đã được chuyển sang: ${nextExam.code} (${nextExam.title})!\nNhấn "Bắt đầu làm bài" để tiến hành kiểm tra.`);
+
+    // Quay về màn hình 1 với thông tin học sinh đã điền sẵn
+    showScreen("start");
+  }
+
+  // ==========================================
+  // RENDER MÀN HÌNH KẾT QUẢ
   // ==========================================
   function renderResultsView(durationMinutes, results) {
+    const currentExam = EXAM_CONFIG.examList[state.currentExamIndex];
+    
     document.getElementById("result-student-info").textContent = 
       `${state.student.name} - Lớp ${state.student.className}`;
+    document.getElementById("result-exam-code").textContent = currentExam.code;
+
     document.getElementById("score-total-val").textContent = state.totalScore.toFixed(2);
-    document.getElementById("score-p1-val").textContent = `${state.totalPointsPart1} đ`;
-    document.getElementById("score-p2-val").textContent = `${state.totalPointsPart2} đ`;
+    document.getElementById("score-p1-val").textContent = `${state.totalPointsPart1} / 3.0 đ`;
+    document.getElementById("score-p2-val").textContent = `${state.totalPointsPart2} / 4.0 đ`;
     document.getElementById("score-time-val").textContent = `${durationMinutes} phút`;
 
     const reviewContainer = document.getElementById("review-container");
@@ -517,7 +577,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (res.type === "essay") {
         itemEl.classList.add("status-essay");
         itemEl.innerHTML = `
-          <div class="review-badge badge-essay">📝 Câu Tự luận / Trả lời ngắn</div>
+          <div class="review-badge badge-essay">📝 Câu Tự luận / Trả lời ngắn (1.5 điểm)</div>
           <div class="question-title"><strong>Câu ${res.index}:</strong> ${res.content}</div>
           
           <div class="essay-compare-grid">
@@ -539,25 +599,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
-  // ĐỒNG BỘ DỮ LIỆU LÊN GOOGLE SHEETS (WEBHOOK)
+  // ĐỒNG BỘ GOOGLE SHEETS
   // ==========================================
   function syncToGoogleSheets(durationMinutes, results) {
     const syncStatusEl = document.getElementById("sync-status");
     const syncTextEl = document.getElementById("sync-text");
+    const currentExam = EXAM_CONFIG.examList[state.currentExamIndex];
 
     if (!EXAM_CONFIG.gasWebhookUrl || EXAM_CONFIG.gasWebhookUrl.trim() === "") {
       syncStatusEl.className = "sync-banner sync-loading";
-      syncTextEl.textContent = "ℹ️ Đã hoàn thành bài thi (Chưa cấu hình Google Apps Script URL trong data.js).";
+      syncTextEl.textContent = `ℹ️ Đã hoàn thành [${currentExam.code}]. (Chưa cấu hình Google Apps Script URL trong data.js).`;
       return;
     }
 
-    // Tách riêng nội dung tự luận để giáo viên dễ chấm
     const essayAnswersSummary = results
       .filter(r => r.type === "essay")
       .map(r => `[Câu ${r.index}]: ${r.studentText}`)
       .join("\n---\n");
 
-    // Chi tiết trắc nghiệm dạng chuỗi tóm tắt
     const testDetailsSummary = results
       .filter(r => r.type !== "essay")
       .map(r => {
@@ -573,6 +632,7 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp: new Date().toLocaleString("vi-VN"),
       studentName: state.student.name,
       studentClass: state.student.className,
+      examCode: currentExam.code, // Gửi kèm Mã Đề (VD: ĐỀ SỐ 01)
       totalScore: state.totalScore,
       part1Score: state.totalPointsPart1,
       part2Score: state.totalPointsPart2,
@@ -581,7 +641,6 @@ document.addEventListener("DOMContentLoaded", () => {
       essayAnswer: essayAnswersSummary
     };
 
-    // Gửi POST request dạng JSON (sử dụng text/plain để tránh CORS preflight với Google Apps Script)
     fetch(EXAM_CONFIG.gasWebhookUrl, {
       method: "POST",
       mode: "no-cors",
@@ -592,7 +651,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then(() => {
         syncStatusEl.className = "sync-banner sync-success";
-        syncTextEl.textContent = "✅ Kết quả và bài làm tự luận đã được lưu thành công vào Google Sheets!";
+        syncTextEl.textContent = `✅ Kết quả [${currentExam.code}] và bài tự luận đã lưu thành công vào Google Sheets!`;
       })
       .catch(err => {
         console.error("Lỗi đồng bộ Google Sheets:", err);
