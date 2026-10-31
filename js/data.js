@@ -17,7 +17,7 @@ const EXAM_CONFIG = {
   durationMinutes: 45, // Thời gian làm bài mỗi đề
   
   // URL Web App của Google Apps Script (Thầy/Cô dán URL của mình vào đây)
-  gasWebhookUrl: "", 
+  gasWebhookUrl: "https://script.google.com/macros/s/AKfycbwG6fRGu_maJPgFSRDudluUNIiKShvcrvxM_qdfydipJ9qkmzZ8yNlPuJ_T7kfU9OY/exec", 
 
   // Số lượng câu hỏi trích xuất cho mỗi đề thi
   examStructure: {
